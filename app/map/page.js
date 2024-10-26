@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import { inter } from '../fonts';
 
+import Image from 'next/image';
+
 const cityCoordinates = {
     Toronto: [43.65107, -79.347015],
     Vancouver: [49.2827, -123.1207],
@@ -72,10 +74,17 @@ const Page = () => {
 
     return (
         <>
-            <header className="w-full p-4 bg-white shadow-md flex justify-between items-center">
-                <div className={`${inter.className} text-xl font-bold`}>
-                    reliefmap.ca
-                </div>
+            <header className="w-full p-4 bg-white shadow-lg relative flex h-20 items-center z-50">
+                <a href='/' className={`${inter.className} text-xl font-bold ml-6 flex items-center space-x-2`}>
+                    <Image
+                        src="/images/ping.png" // Path to your PNG file in the public folder
+                        alt="A description of the image"
+                        width={18} // Desired width
+                        height={18} // Desired height
+                        priority // Optional: Prioritizes image loading
+                    />
+                    <span>reliefmap.ca</span>
+                </a>
             </header>
 
             <MapContainer

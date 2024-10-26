@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from '@radix-ui/react-dialog'; // Import DialogTitle from Radix
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'; // Import VisuallyHidden from Radix
 
+import Image from 'next/image';
+
 import {
   CommandDialog,
   CommandEmpty,
@@ -40,45 +42,57 @@ const Page = () => {
   }
 
   return (
-    <div className="relative h-screen flex flex-col items-center justify-center">
+    <>
+      <header className="w-full p-4 h-20 bg-white shadow-md flex items-center">
+        <a href='/' className={`${inter.className} text-xl font-bold ml-6 flex items-center space-x-2`}>
+          <Image
+            src="/images/ping.png" // Path to your PNG file in the public folder
+            alt="A description of the image"
+            width={18} // Desired width
+            height={18} // Desired height
+            priority // Optional: Prioritizes image loading
+          />
+          <span>reliefmap.ca</span>
+        </a>
+      </header>
 
-      <div className={`${inter.className} absolute top-5 left-5 font-bold text-lg z-50`}>
-        <a href="/" className="text-black">reliefmap.ca</a>
-      </div>
-      <Button onClick={openSearch}>Search</Button>
+      <div className="relative h-screen flex flex-col justify-center items-center">
 
-      <div className="text-center">
-        <h className={`${inter.className} text-5xl font-medium`}>
-          Find relief near you:
-          <CommandDialog open={open} onOpenChange={setOpen}>
-            <VisuallyHidden>
-              <DialogTitle>Search for Canadian Cities</DialogTitle>
-              <DialogDescription>
-                Search for a Canadian city to find relief resources near you.
-              </DialogDescription>
-            </VisuallyHidden>
-            <CommandInput
-              placeholder="Type a command or search..."
-              />
-            <CommandList>
-                <CommandGroup heading="Suggestions">
-                  {canadianCities.map((city) => (
-                    <CommandItem
-                      key={city}
-                      value={city}
-                      onSelect={() => handleSearch(city)}
-                      className="cursor-pointer hover:bg-gray-200 p-2"
-                    >
-                      {city}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-            <CommandEmpty>No results found.</CommandEmpty>
-            </CommandList>
-          </CommandDialog>
-        </h>
+        <div className="text-center justify-centre">
+          <h className={`${inter.className} text-5xl font-medium`}>
+            Find relief near you:
+            <CommandDialog open={open} onOpenChange={setOpen}>
+              <VisuallyHidden>
+                <DialogTitle>Search for Canadian Cities</DialogTitle>
+                <DialogDescription>
+                  Search for a Canadian city to find relief resources near you.
+                </DialogDescription>
+              </VisuallyHidden>
+              <CommandInput
+                placeholder="Type a command or search..."
+                />
+              <CommandList>
+                  <CommandGroup heading="Suggestions">
+                    {canadianCities.map((city) => (
+                      <CommandItem
+                        key={city}
+                        value={city}
+                        onSelect={() => handleSearch(city)}
+                        className="cursor-pointer hover:bg-gray-200 p-2"
+                      >
+                        {city}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+              <CommandEmpty>No results found.</CommandEmpty>
+              </CommandList>
+            </CommandDialog>
+          </h>
+          <Button onClick={openSearch}>Search</Button>
+        </div>
       </div>
-    </div>
+    </>
+
   );
 };
 
