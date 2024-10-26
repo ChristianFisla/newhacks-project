@@ -1,6 +1,7 @@
 'use client'; // Ensures client-side rendering
 
 import { useState } from 'react';
+import { inter } from './fonts';
 
 const canadianCities = [
   "Toronto", "Vancouver", "Montreal", "Calgary", "Edmonton", "Ottawa", 
@@ -38,22 +39,22 @@ const Page = () => {
   return (
     <div className="relative h-screen flex flex-col items-center justify-center">
       {/* Top Left Corner Text */}
-      <div className="absolute top-4 left-4 font-bold text-lg">
+      <div className={`${inter.className} absolute top-5 left-5 font-bold text-lg`}>
         <a href="/" className="text-black">reliefmap.ca</a>
       </div>
 
       {/* Main Content */}
       <div className="text-center">
-        <p className="text-2xl font-bold">
+        <h className={`${inter.className} text-5xl font-medium`}>
           Find relief near you:
-          <input 
-            type="text" 
-            value={location} 
-            onChange={handleChange} 
-            placeholder="my location" 
+          <input
+            type="text"
+            value={location}
+            onChange={handleChange}
+            placeholder="my location"
             className="ml-2 border-b-2 border-red-500 outline-none italic text-xl"
           />
-        </p>
+        </h>
 
         {/* Suggestions Dropdown */}
         {suggestions.length > 0 && (
