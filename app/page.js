@@ -36,33 +36,33 @@ const Page = () => {
   };
 
   return (
-    <div style={styles.pageContainer}>
+    <div className="relative h-screen flex flex-col items-center justify-center">
       {/* Top Left Corner Text */}
-      <div style={styles.header}>
-        <a href="/" style={styles.headerText}>reliefmap.ca</a>
+      <div className="absolute top-4 left-4 font-bold text-lg">
+        <a href="/" className="text-black">reliefmap.ca</a>
       </div>
 
       {/* Main Content */}
-      <div style={styles.container}>
-        <p style={styles.text}>
+      <div className="text-center">
+        <p className="text-2xl font-bold">
           Find relief near you:
           <input 
             type="text" 
             value={location} 
             onChange={handleChange} 
             placeholder="my location" 
-            style={styles.input} 
+            className="ml-2 border-b-2 border-red-500 outline-none italic text-xl"
           />
         </p>
 
         {/* Suggestions Dropdown */}
         {suggestions.length > 0 && (
-          <div style={styles.suggestionsBox}>
+          <div className="absolute mt-4 bg-white border border-gray-300 w-48 max-h-40 overflow-y-auto z-10">
             {suggestions.map((city, index) => (
               <div 
                 key={index} 
                 onClick={() => handleSuggestionClick(city)}
-                style={styles.suggestion}
+                className="p-2 hover:bg-gray-100 cursor-pointer"
               >
                 {city}
               </div>
@@ -72,60 +72,6 @@ const Page = () => {
       </div>
     </div>
   );
-};
-
-const styles = {
-  pageContainer: {
-    position: 'relative',
-    height: '100vh',
-    width: '100%',
-  },
-  header: {
-    position: 'absolute',
-    top: '10px',
-    left: '10px',
-    fontSize: '18px',
-    fontWeight: 'bold',
-  },
-  headerText: {
-    textDecoration: 'none',
-    color: 'black',
-  },
-  container: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '100vh',
-    flexDirection: 'column',
-    fontFamily: 'Arial, sans-serif',
-  },
-  text: {
-    fontSize: '24px',
-    fontWeight: 'bold',
-  },
-  input: {
-    border: 'none',
-    borderBottom: '2px solid red',
-    outline: 'none',
-    fontSize: '24px',
-    fontStyle: 'italic',
-    marginLeft: '8px',
-  },
-  suggestionsBox: {
-    position: 'absolute',
-    top: '60%',
-    backgroundColor: 'white',
-    border: '1px solid #ccc',
-    width: '200px',
-    maxHeight: '150px',
-    overflowY: 'auto',
-    zIndex: 1000,
-  },
-  suggestion: {
-    padding: '10px',
-    cursor: 'pointer',
-    borderBottom: '1px solid #ddd',
-  },
 };
 
 export default Page;
