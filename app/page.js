@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { inter } from './fonts';
 
+import { useRouter } from 'next/navigation';
+
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from '@radix-ui/react-dialog'; // Import DialogTitle from Radix
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden'; // Import VisuallyHidden from Radix
@@ -25,25 +27,24 @@ const canadianCities = [
 ];
 
 const Page = () => {
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const router = useRouter();
 
-  console.log(searchQuery)
+  const [open, setOpen] = useState(false);
+
+  const handleSearch = city => {
+    router.push(`/map?city=${encodeURIComponent(city)}`); // Encode the city to handle special characters
+  }
 
   const openSearch = () => {
     setOpen(true);
   }
 
-  const filteredCities = canadianCities.filter((city) =>
-    city.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div className="relative h-screen flex flex-col items-center justify-center">
-      <div className={`${inter.className} absolute top-5 left-5 font-bold text-lg`}>
+
+      <div className={`${inter.className} absolute top-5 left-5 font-bold text-lg z-50`}>
         <a href="/" className="text-black">reliefmap.ca</a>
       </div>
-
       <Button onClick={openSearch}>Search</Button>
 
       <div className="text-center">
@@ -61,11 +62,11 @@ const Page = () => {
               />
             <CommandList>
                 <CommandGroup heading="Suggestions">
-                  {filteredCities.map((city) => (
+                  {canadianCities.map((city) => (
                     <CommandItem
                       key={city}
                       value={city}
-                      onSelect={() => setSearchQuery(city)}
+                      onSelect={() => handleSearch(city)}
                       className="cursor-pointer hover:bg-gray-200 p-2"
                     >
                       {city}
