@@ -3,10 +3,11 @@ import app from "./firebase-config";
 
 const db = getFirestore(app)
 
-const addUserFirestore = async (site) => {
+const addSiteFirestore = async (site) => {
+    console.log('Adding site to Firestore');
     try {
         await setDoc(doc(db, "sites", "test"), {
-            name: "site.name"
+            name: site.name,
         });
         console.log('Collection updated successfully');
     } catch (error) {
@@ -14,4 +15,4 @@ const addUserFirestore = async (site) => {
     }
 }
 
-export { addUserFirestore };
+export { addSiteFirestore };
