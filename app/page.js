@@ -1,6 +1,11 @@
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <h1>BLANK PAGE</h1>
+    <>
+      <div className="header">reliefmap.ca</div>
+      <h1>BLANK PAGE</h1>
+      <Button>CLICK ME</Button>
+    </>
   );
 }
