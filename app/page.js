@@ -1,7 +1,7 @@
 'use client'; // Ensures client-side rendering
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { inter } from './fonts';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +10,7 @@ import { addSiteFirestore } from '@/firebase/firestore';
 
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Image from 'next/image';
-
+import { loadCanadianCities } from '@/utils/loadCanadianCities';
 import { Button } from '@/components/ui/button';
 import {
   CommandDialog,
@@ -54,10 +54,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: '/leaflet/marker-shadow.png',
 });
 
-const canadianCities = [
-  // ... your list of cities
-];
-
 const defaultTags = ['Food', 'Water', 'Medical Aid', 'Shelter']; // Define default tags
 
 const Page = () => {
@@ -69,6 +65,16 @@ const Page = () => {
   const [nameNewSite, setNameNewSite] = useState('');
   const [tagsNewSite, setTagsNewSite] = useState([]); // Initialize as an empty array
   const [position, setPosition] = useState(null); // Initialize position state
+
+  const [canadianCities, setCanadianCities] = useState([])
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      const cities = await loadCanadianCities();
+      setCanadianCities(cities);
+    };
+    fetchCities();
+  }, []);
 
   const handleSearch = (city) => {
     router.push(`/map?city=${encodeURIComponent(city)}`); // Encode the city to handle special characters

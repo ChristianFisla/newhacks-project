@@ -1,5 +1,9 @@
 'use client';
 
+import app from '@/firebase/firebase-config';
+import { fetchFacilities } from '@/utils/fetchFacilities';
+import { loadCSV } from '@/utils/loadCsv';
+import { collection, getFirestore, onSnapshot } from 'firebase/firestore'; // Import Firestore utilities
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
@@ -10,8 +14,8 @@ import {
   TileLayer,
   useMap,
 } from 'react-leaflet';
-import { fetchFacilities } from '@/utils/fetchFacilities';
-import { loadCSV } from '@/utils/loadCsv';
+
+const db = getFirestore(app);
 
 // Define the path for the custom icons
 const pingIcon = new L.Icon({
@@ -192,7 +196,27 @@ const RecenterButton = ({ position }) => {
 const MapComponent = ({ selectedCity }) => {
   const [facilities, setFacilities] = useState([]);
   const [csvFacilities, setCsvFacilities] = useState([]);
-  const [position, setPosition] = useState(null); // State to store user's location
+  const [position, setPosition] = useState(null);
+
+  const [userSites, setUserSites] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      collection(db, 'sites'), // Replace 'relief_sites' with the correct collection name
+      (snapshot) => {
+        const sites = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log('Real-time Sites:', sites);
+        setUserSites(sites); // Update state with real-time data
+      }
+    );
+
+    return () => unsubscribe(); // Unsubscribe from updates when the component unmounts
+  }, []);
+
+  console.log('User Sites:', userSites);
 
   // Set Toronto as the default center with a higher zoom level
   const defaultCenter = cityCoordinates.Toronto;
@@ -332,8 +356,23 @@ const MapComponent = ({ selectedCity }) => {
               </Popup>
             </Marker>
           ))}
-
-        {/* Render marker for user's location */}
+        {userSites.length > 0 ? (
+          userSites.map((site, index) => (
+            <Marker
+              key={`user-${index}`}
+              position={site.location}
+              icon={pingIcon}
+            >
+              <Popup>
+                {site.name || 'Unnamed Facility'}
+                <br />
+                {site.tags.join(', ')}
+              </Popup>
+            </Marker>
+            ))
+        ) : (
+          console.log('No user sites found')
+        )}
         {position && (
           <Marker position={position} icon={pegman}>
             <Popup>{'Your Location'}</Popup>

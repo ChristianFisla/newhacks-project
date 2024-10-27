@@ -1,26 +1,45 @@
 import Papa from 'papaparse';
 
-export const loadCanadianCities = async (url) => {
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
+let cachedData = null; // Optional caching to prevent multiple fetches
+
+export const loadCanadianCities = async () => {
+  if (cachedData) {
+    return cachedData;
+  }
+
+  try {
+    const response = await fetch('/canadacities.csv');
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch canadacities.csv: ${response.status} ${response.statusText}`);
+    }
+
+    const csvText = await response.text();
+
+    const results = Papa.parse(csvText, {
       header: true,
-      complete: (results) => {
-        const cityCoordinates = results.data.reduce((acc, city) => {
-          const cityName = city.city_ascii;
-          const lat = parseFloat(city.lat);
-          const lng = parseFloat(city.lng);
-
-          if (!isNaN(lat) && !isNaN(lng)) {
-            acc[cityName] = [lat, lng];
-          }
-
-          return acc;
-        }, {});
-
-        resolve(cityCoordinates);
-      },
-      error: (error) => reject(error),
+      skipEmptyLines: true,
     });
-  });
+
+    if (results.errors && results.errors.length > 0) {
+      console.error('CSV Parsing Errors:', results.errors);
+      throw new Error('Error parsing CSV');
+    }
+
+    const cityNames = results.data
+      .map((row) => {
+        const cityName = row.city_ascii;
+        if (cityName) {
+          return cityName.charAt(0).toUpperCase() + cityName.slice(1).toLowerCase();
+        }
+        return null;
+      })
+      .filter(Boolean); // Remove null values
+
+    cachedData = cityNames;
+    return cachedData;
+  } catch (error) {
+    console.error('Error loading Canadian cities:', error);
+    throw error;
+  }
 };
