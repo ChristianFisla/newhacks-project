@@ -26,6 +26,13 @@ const pingIcon = new L.Icon({
   popupAnchor: [1, -34],
 });
 
+const pingIconGreen = new L.Icon({
+  iconUrl: '/images/pinggreen.png',
+  iconSize: [30, 45],
+  iconAnchor: [15, 45],
+  popupAnchor: [1, -34],
+});
+
 const pegman = new L.Icon({
   iconUrl: '/images/pegman.png',
   iconSize: [45, 45],
@@ -34,7 +41,7 @@ const pegman = new L.Icon({
 });
 
 const pingIconYellow = new L.Icon({
-  iconUrl: '/images/pinggreen.png',
+  iconUrl: '/images/pingyellow.png',
   iconSize: [30, 45],
   iconAnchor: [15, 45],
   popupAnchor: [1, -34],
@@ -80,6 +87,7 @@ const MapComponent = ({ selectedCity }) => {
   // Toggle visibility of facility types
   const [showCsvHospitals, setShowCsvHospitals] = useState(true);
   const [showShelters, setShowShelters] = useState(true);
+  const [showUserSites, setShowUserSites] = useState(true); // Add state for user sites
 
   // Get user's geolocation
   useEffect(() => {
@@ -131,17 +139,6 @@ const MapComponent = ({ selectedCity }) => {
       });
   }, []);
 
-  // Ensure selectedCity matches the keys in cityCoordinates
-  useEffect(() => {
-    if (selectedCity) {
-      console.log('Selected City:', selectedCity);
-      console.log('Available Cities:', Object.keys(cityCoordinates));
-      if (!cityCoordinates[selectedCity]) {
-        console.error('City not found in cityCoordinates');
-      }
-    }
-  }, [selectedCity, cityCoordinates]);
-
   return (
     <div style={{ display: 'flex', position: 'relative' }}>
       {/* Checklist UI */}
@@ -168,6 +165,14 @@ const MapComponent = ({ selectedCity }) => {
             onChange={() => setShowShelters(!showShelters)}
           />{' '}
           Show Shelters
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            checked={showUserSites}
+            onChange={() => setShowUserSites(!showUserSites)}
+          />{' '}
+          Show User Sites
         </div>
       </div>
 
@@ -236,12 +241,12 @@ const MapComponent = ({ selectedCity }) => {
             </Marker>
           ))}
 
-        {userSites.length > 0 &&
+        {showUserSites &&
           userSites.map((site, index) => (
             <Marker
               key={`user-${index}`}
               position={[site.location.lat, site.location.lng]}
-              icon={pingIcon}
+              icon={pingIconGreen}
             >
               <Popup>
                 {site.name || 'Unnamed Facility'}
