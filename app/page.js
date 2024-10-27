@@ -43,7 +43,7 @@ const Page = () => {
 
   return (
     <>
-      <header className="w-full p-4 h-20 bg-white shadow-md flex items-center">
+      <header className="w-full p-4 h-20 bg-white shadow-lg flex items-center z-10">
         <a href='/' className={`${inter.className} text-xl font-bold ml-6 flex items-center space-x-2`}>
           <Image
             src="/images/ping.png" // Path to your PNG file in the public folder
@@ -55,6 +55,17 @@ const Page = () => {
           <span>reliefmap.ca</span>
         </a>
       </header>
+
+      <div className="relative w-full h-screen">
+        <Image
+          src="/images/landingphoto.jpg" // Path to your PNG file in the public folder
+          alt="A description of the image"
+          layout="fill" // Makes the image fill the parent container
+          objectFit="cover"
+          priority // Optional: Prioritizes image loading
+          className='z-0' // Ensure the image is behind everything else
+        />
+      </div>
 
       <div className="relative h-screen flex flex-col justify-center items-center">
 
