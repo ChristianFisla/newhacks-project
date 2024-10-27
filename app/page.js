@@ -10,7 +10,7 @@ import { addSiteFirestore } from '@/firebase/firestore';
 
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Image from 'next/image';
-import { loadCanadianCities } from '@/utils/loadCanadianCities';
+import { loadCanadianCityNames } from '@/utils/loadCanadianCityNames';
 import { Button } from '@/components/ui/button';
 import {
   CommandDialog,
@@ -70,7 +70,7 @@ const Page = () => {
 
   useEffect(() => {
     const fetchCities = async () => {
-      const cities = await loadCanadianCities();
+      const cities = await loadCanadianCityNames();
       setCanadianCities(cities);
     };
     fetchCities();

@@ -1,10 +1,10 @@
 import Papa from 'papaparse';
 
-let cachedData = null; // Optional caching to prevent multiple fetches
+let cachedCityNames = null;
 
-export const loadCanadianCities = async () => {
-  if (cachedData) {
-    return cachedData;
+export const loadCanadianCityNames = async () => {
+  if (cachedCityNames) {
+    return cachedCityNames;
   }
 
   try {
@@ -21,6 +21,10 @@ export const loadCanadianCities = async () => {
       skipEmptyLines: true,
     });
 
+    if (!results.data) {
+      throw new Error('No data found in CSV');
+    }
+
     if (results.errors && results.errors.length > 0) {
       console.error('CSV Parsing Errors:', results.errors);
       throw new Error('Error parsing CSV');
@@ -28,18 +32,19 @@ export const loadCanadianCities = async () => {
 
     const cityNames = results.data
       .map((row) => {
-        const cityName = row.city_ascii;
+        let cityName = row.city_ascii;
         if (cityName) {
-          return cityName.charAt(0).toUpperCase() + cityName.slice(1).toLowerCase();
+          cityName = cityName.charAt(0).toUpperCase() + cityName.slice(1).toLowerCase();
+          return cityName;
         }
         return null;
       })
       .filter(Boolean); // Remove null values
 
-    cachedData = cityNames;
-    return cachedData;
+    cachedCityNames = cityNames;
+    return cityNames;
   } catch (error) {
-    console.error('Error loading Canadian cities:', error);
+    console.error('Error loading Canadian city names:', error);
     throw error;
   }
 };
