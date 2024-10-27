@@ -4,13 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { inter } from './fonts';
 
-import { getAllSitesFirestore } from '@/firebase/get-docs';
-
 import { v4 as uuidv4 } from 'uuid';
 
 import { addSiteFirestore } from '@/firebase/firestore';
 
-import { VisuallyHidden } from '@radix-ui/react-visually-hidden'; // Import VisuallyHidden from Radix
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +21,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 
-import { Checkbox } from '@/components/ui/checkbox'; // Import the Checkbox component
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -31,35 +29,33 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+// Import Leaflet components
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
+
+const pingIcon = new L.Icon({
+  iconUrl: '/images/ping.png',
+  iconSize: [30, 45],
+  iconAnchor: [15, 45],
+  popupAnchor: [1, -34],
+});
+
+// Fix Leaflet's default icon issue with Next.js
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+  iconUrl: '/leaflet/marker-icon.png',
+  shadowUrl: '/leaflet/marker-shadow.png',
+});
+
 const canadianCities = [
-  'Toronto',
-  'Vancouver',
-  'Montreal',
-  'Calgary',
-  'Edmonton',
-  'Ottawa',
-  'Winnipeg',
-  'Quebec City',
-  'Hamilton',
-  'Kitchener',
-  'Victoria',
-  'Halifax',
-  'Saskatoon',
-  'Regina',
-  "St. John's",
-  'Sudbury',
-  'Windsor',
-  'Charlottetown',
-  'Fredericton',
-  'Moncton',
-  'Kelowna',
-  'London',
-  'Barrie',
+  // ... your list of cities
 ];
 
 const defaultTags = ['Food', 'Water', 'Medical Aid', 'Shelter']; // Define default tags
@@ -72,6 +68,7 @@ const Page = () => {
 
   const [nameNewSite, setNameNewSite] = useState('');
   const [tagsNewSite, setTagsNewSite] = useState([]); // Initialize as an empty array
+  const [position, setPosition] = useState(null); // Initialize position state
 
   const handleSearch = (city) => {
     router.push(`/map?city=${encodeURIComponent(city)}`); // Encode the city to handle special characters
@@ -82,17 +79,32 @@ const Page = () => {
   };
 
   const addReliefSite = () => {
-    console.log(nameNewSite, tagsNewSite); // Logs the name and array of selected tags
+    console.log(nameNewSite, tagsNewSite, position); // Logs the name, tags, and position
 
     addSiteFirestore({
       id: uuidv4(),
       name: nameNewSite,
       tags: tagsNewSite,
+      location: position ? { lat: position.lat, lng: position.lng } : null,
     }); // Add the new site to Firestore
 
     setRegOpen(false);
     setNameNewSite(''); // Reset the name input
     setTagsNewSite([]);
+    setPosition(null); // Reset the position
+  };
+
+  // Component for picking location
+  const LocationMarker = ({ position, setPosition }) => {
+    useMapEvents({
+      click(e) {
+        setPosition(e.latlng);
+      },
+    });
+
+    return position === null ? null : (
+      <Marker position={position} icon={pingIcon}></Marker>
+    );
   };
 
   return (
@@ -112,21 +124,25 @@ const Page = () => {
             />
             <span>reliefmap.ca</span>
           </a>
-          <Button onClick={() => {
-            console.log(getAllSitesFirestore());
-          }}>TESTING READ</Button>
           <div className="ml-auto mr-8">
             <Dialog
               className={`${inter.className} ml-auto`}
               open={regOpen}
-              onOpenChange={setRegOpen}
+              onOpenChange={(isOpen) => {
+                setRegOpen(isOpen);
+                if (!isOpen) {
+                  setNameNewSite(''); // Reset the name input
+                  setTagsNewSite([]); // Reset the tags array
+                  setPosition(null); // Reset the position
+                }
+              }}
             >
               <DialogTrigger asChild>
                 <Button variant="outline" className={`${inter.className}`}>
                   Register New Relief Site
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[600px] mx-auto">
                 <DialogHeader>
                   <DialogTitle className="font-black text-xl">
                     Add a Disaster Relief Site
@@ -172,6 +188,27 @@ const Page = () => {
                       ))}
                     </div>
                   </div>
+                  <div className="grid grid-cols-4 items-start gap-4">
+                    <Label htmlFor="location" className="text-right mt-2">
+                      Location
+                    </Label>
+                    <div className="col-span-3">
+                      <div className="h-60 w-full border-2 border-gray-300 rounded">
+                        <MapContainer
+                          center={[56.1304, -106.3468]}
+                          zoom={4}
+                          scrollWheelZoom={true}
+                          style={{ height: '100%', width: '100%' }}
+                        >
+                          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                          <LocationMarker position={position} setPosition={setPosition} />
+                        </MapContainer>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        Click on the map to set the location of the relief site.
+                      </p>
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button type="submit" onClick={addReliefSite}>
@@ -189,19 +226,18 @@ const Page = () => {
             fill
             style={{ objectFit: 'cover' }}
             priority
-            className="z-0"
+            className="z-0" // Ensure the image is behind everything else
           />
+          <div className="absolute inset-0 bg-black bg-opacity-70 z-10"></div>
         </div>
 
-        <div className="absolute inset-0 flex flex-col justify-center items-center z-10">
-          <div className="bg-black bg-opacity-50 px-6 py-4 rounded-lg">
-            <h
-              className={`${inter.className} text-5xl font-bold text-white hover:cursor-pointer`}
-              onClick={openSearch}
-            >
-              Find Relief Resources Near You
-            </h>
-          </div>
+        <div className="absolute inset-0 flex flex-col justify-center items-center z-20">
+          <h
+            className={`${inter.className} text-6xl font-bold text-white hover:cursor-pointer`}
+            onClick={openSearch}
+          >
+            Find Relief Resources Near You
+          </h>
         </div>
 
         <CommandDialog open={open} onOpenChange={setOpen}>

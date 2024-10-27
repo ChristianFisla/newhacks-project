@@ -9,6 +9,7 @@ const addSiteFirestore = async (site) => {
         await setDoc(doc(db, "sites", site.id), {
             name: site.name,
             tags: site.tags,
+            location: site.location,
         });
         console.log('Collection updated successfully');
     } catch (error) {
