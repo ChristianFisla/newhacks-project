@@ -1,6 +1,6 @@
 // utils/fetchFacilities.js
 
-export const fetchFacilities = async (lat, lon, radius = 5000) => {
+export const fetchFacilities = async (lat, lon, radius = 50000) => {
     const overpassUrl = 'https://overpass-api.de/api/interpreter';
     const query = `
       [out:json];

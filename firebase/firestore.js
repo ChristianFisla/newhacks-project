@@ -6,8 +6,9 @@ const db = getFirestore(app)
 const addSiteFirestore = async (site) => {
     console.log('Adding site to Firestore');
     try {
-        await setDoc(doc(db, "sites", "test"), {
+        await setDoc(doc(db, "sites", site.id), {
             name: site.name,
+            tags: site.tags,
         });
         console.log('Collection updated successfully');
     } catch (error) {
