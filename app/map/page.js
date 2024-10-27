@@ -2,122 +2,144 @@
 
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useSearchParams } from 'next/navigation'; // Import useSearchParams to get the query parameters
-import { useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
+import { fetchFacilities } from '@/utils/fetchFacilities';
+import { loadCSV } from '@/utils/loadCsv'; // Import the loadCSV utility
 import { inter } from '../fonts';
-
 import Image from 'next/image';
 
-const cityCoordinates = {
-    Toronto: [43.65107, -79.347015],
-    Vancouver: [49.2827, -123.1207],
-    Montreal: [45.5017, -73.5673],
-    Calgary: [51.0447, -114.0719],
-    Edmonton: [53.5461, -113.4938],
-    Ottawa: [45.4215, -75.6972],
-    Winnipeg: [49.8951, -97.1384],
-    "Quebec City": [46.8139, -71.2082],
-    Hamilton: [43.2557, -79.8711],
-    Kitchener: [43.4516, -80.4925],
-    Victoria: [48.4284, -123.3656],
-    Halifax: [44.6488, -63.5752],
-    Saskatoon: [52.1332, -106.6700],
-    Regina: [50.4452, -104.6189],
-    "St. John's": [47.5615, -52.7126],
-    Sudbury: [46.4917, -80.993],
-    Windsor: [42.3149, -83.0364],
-    Charlottetown: [46.2382, -63.1311],
-    Fredericton: [45.9636, -66.6431],
-    Moncton: [46.0878, -64.7782],
-    Kelowna: [49.888, -119.496],
-    London: [42.9849, -81.2453],
-    Barrie: [44.3894, -79.6903],
-};
-
-// Configure the default icon for Leaflet markers
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-    iconUrl: require('leaflet/dist/images/marker-icon.png'),
-    shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+// Define the path for the custom icon
+const pingIcon = new L.Icon({
+  iconUrl: '/images/ping.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+  shadowSize: [41, 41],
 });
 
+// Coordinates for Canadian cities
+const cityCoordinates = {
+  Toronto: [43.65107, -79.347015],
+  Vancouver: [49.2827, -123.1207],
+  Montreal: [45.5017, -73.5673],
+  // Add more cities as needed...
+};
+
 const CenterMap = ({ selectedCity }) => {
-    const map = useMap();
+  const map = useMap();
 
-    useEffect(() => {
-        if (selectedCity && cityCoordinates[selectedCity]) {
-        map.setView(cityCoordinates[selectedCity], 10, { animate: true });
-        }
-    }, [selectedCity, map]);
+  useEffect(() => {
+    if (selectedCity && cityCoordinates[selectedCity]) {
+      map.setView(cityCoordinates[selectedCity], 10, { animate: true });
+    }
+  }, [selectedCity, map]);
 
-    return null;
+  return null;
 };
 
 const Page = () => {
-    const searchParams = useSearchParams(); // Get the query parameters
-    const selectedCity = searchParams.get('city'); // Extract the 'city' parameter
+  const searchParams = useSearchParams();
+  const selectedCity = searchParams.get('city');
+  const [facilities, setFacilities] = useState([]);
+  const [csvFacilities, setCsvFacilities] = useState([]);
 
-    const defaultCenter = [56.1304, -106.3468]; // Default center of Canada
-    const zoomLevel = selectedCity ? 10 : 4;
+  const defaultCenter = [56.1304, -106.3468];
+  const zoomLevel = selectedCity ? 10 : 4;
 
-    useEffect(() => {
-        // Cleanup function to reset the map container when the component unmounts
-        return () => {
-        const mapContainer = document.getElementById('map-container');
-        if (mapContainer && mapContainer._leaflet_id) {
-            delete mapContainer._leaflet_id;
-        }
-        };
-    }, [selectedCity]);
+  useEffect(() => {
+    // Fetch facilities from Overpass API
+    if (selectedCity && cityCoordinates[selectedCity]) {
+      const [lat, lon] = cityCoordinates[selectedCity];
+      fetchFacilities(lat, lon).then(data => {
+        console.log('Overpass API data:', data);
+        setFacilities(data);
+      });
+    }
 
-    return (
-        <>
-            <header className="w-full p-4 bg-white shadow-lg relative flex h-20 items-center z-50">
-                <a href='/' className={`${inter.className} text-xl font-bold ml-6 flex items-center space-x-2`}>
-                    <Image
-                        src="/images/ping.png" // Path to your PNG file in the public folder
-                        alt="A description of the image"
-                        width={18} // Desired width
-                        height={18} // Desired height
-                        priority // Optional: Prioritizes image loading
-                    />
-                    <span>reliefmap.ca</span>
-                </a>
-            </header>
+    // Load and parse CSV data
+    loadCSV('/odhf_v1.csv') // Assuming the CSV file is in the public directory
+      .then(data => {
+        // Filter valid entries with latitude and longitude
+        const filteredData = data.filter(row => row.latitude && row.longitude);
+        // Map the CSV data to a format similar to the API data
+        const parsedCsvFacilities = filteredData.map(facility => ({
+          lat: parseFloat(facility.latitude),
+          lon: parseFloat(facility.longitude),
+          tags: {
+            name: facility.facility_name,
+            amenity: facility.odhf_facility_type,
+          },
+        }));
+        console.log('CSV data:', parsedCsvFacilities);
+        setCsvFacilities(parsedCsvFacilities);
+      })
+      .catch(error => {
+        console.error('Error loading CSV:', error);
+      });
+  }, [selectedCity]);
 
-            <MapContainer
-            id="map-container"
-            key={selectedCity || 'default'} // Force remount on city change
-            center={selectedCity ? cityCoordinates[selectedCity] : defaultCenter}
-            zoom={zoomLevel}
-            scrollWheelZoom={true}
-            style={{ height: '100vh', width: '100vw', position: 'relative', zIndex: 1 }} // Ensure the height and width are set
-            >
-            <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
+  return (
+    <>
+      <header className="w-full p-4 bg-white shadow-lg relative flex h-20 items-center z-50">
+        <a href='/' className={`${inter.className} text-xl font-bold ml-6 flex items-center space-x-2`}>
+          <Image
+            src="/images/ping.png"
+            width={18}
+            height={18}
+            priority
+            alt="Logo"
+          />
+          <span>reliefmap.ca</span>
+        </a>
+      </header>
 
-            {selectedCity && (
-                <>
-                <Marker position={cityCoordinates[selectedCity]}>
-                    <Popup>{selectedCity}</Popup>
-                </Marker>
-                <CenterMap selectedCity={selectedCity} />
-                </>
-            )}
+      <MapContainer
+        id="map-container"
+        key={selectedCity || 'default'}
+        center={selectedCity ? cityCoordinates[selectedCity] : defaultCenter}
+        zoom={zoomLevel}
+        scrollWheelZoom={true}
+        style={{ height: '100vh', width: '100vw', position: 'relative', zIndex: 1 }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
 
-            {/* Render markers for all cities */}
-            {Object.entries(cityCoordinates).map(([city, coords]) => (
-                <Marker key={city} position={coords}>
-                <Popup>{city}</Popup>
-                </Marker>
-            ))}
-            </MapContainer>
-        </>
-    );
+        {selectedCity && (
+          <>
+            <Marker position={cityCoordinates[selectedCity]} icon={pingIcon}>
+              <Popup>{selectedCity}</Popup>
+            </Marker>
+            <CenterMap selectedCity={selectedCity} />
+          </>
+        )}
+
+        {/* Render markers for facilities from Overpass API */}
+        {facilities.map((facility, index) => (
+          <Marker key={`overpass-${index}`} position={[facility.lat, facility.lon]} icon={pingIcon}>
+            <Popup>
+              {facility.tags.name || 'Unnamed Facility'}<br />
+              {facility.tags.amenity}
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Render markers for facilities from CSV */}
+        {csvFacilities.map((facility, index) => (
+          <Marker key={`csv-${index}`} position={[facility.lat, facility.lon]} icon={pingIcon}>
+            <Popup>
+              {facility.tags.name || 'Unnamed Facility'}<br />
+              {facility.tags.amenity}
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </>
+  );
 };
 
 export default Page;
